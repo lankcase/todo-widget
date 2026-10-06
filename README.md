@@ -167,6 +167,21 @@ python tools/desktop_probe.py all             # 贴桌面三种模式诊断
 
 `tools/` 里的工具都用 `TODOWIDGET_HOME` 环境变量把数据目录指向临时目录，不会污染真实数据。设置这个环境变量也可以做便携版（数据跟着程序目录走）。
 
+### 网络受限时怎么推送
+
+国内直连 `github.com:443` 经常被重置，但 `api.github.com` 通常是通的。这种情况下可以用仓库里的
+`tools/gh_push_via_api.py`，走 Git Data API 把当前提交推上去：
+
+```bash
+python tools/gh_push_via_api.py
+```
+
+它的做法是复现本地 HEAD 的 tree / author / committer / message，所以远端提交的 SHA 与本地**完全一致**，
+两边历史不会分叉，网络恢复后直接 `git push` 就是快进，不需要 `--force`。
+
+（注意：内容必须从 `git cat-file blob HEAD:<path>` 读，不能直接读工作区文件——
+git 提交时按 `core.autocrlf` 做过换行规范化，读磁盘会得到不同的字节，blob 的 SHA 就对不上了。）
+
 ### 几个踩过的坑（改代码前值得一看）
 
 1. **`-alpha` 和 `-transparentcolor` 会互相覆盖**（都是 `SetLayeredWindowAttributes`，后调的顶掉前一个的 flag）。圆角+透明度必须一起设，见 `win32tools.apply_layered_window`。
