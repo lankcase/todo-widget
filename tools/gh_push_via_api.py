@@ -49,9 +49,12 @@ def main() -> int:
     # 解析本地提交对象的原始头部
     head, _, message = raw.partition("\n\n")
     fields: dict[str, str] = {}
+    parents: list[str] = []
     for line in head.splitlines():
         key, _, value = line.partition(" ")
-        if key in ("tree", "parent", "author", "committer"):
+        if key == "parent":
+            parents.append(value)
+        elif key in ("tree", "author", "committer"):
             fields.setdefault(key, value)
 
     def parse_ident(value: str) -> dict:
@@ -72,7 +75,7 @@ def main() -> int:
 
     author = parse_ident(fields["author"])
     committer = parse_ident(fields["committer"])
-    print(f"本地提交 {local_sha[:12]}")
+    print(f"本地提交 {local_sha[:12]}（父提交 {len(parents)} 个）")
     print(f"  author  = {author['name']} <{author['email']}> {author['date']}")
     print(f"  message = {message.splitlines()[0][:50]}…")
 
@@ -107,8 +110,11 @@ def main() -> int:
         print(f"  ! 与本地 tree 不一致（本地 {local_tree}）")
 
     print("\n创建 commit…")
-    payload = {"message": message, "tree": tree["sha"],
-               "author": author, "committer": committer}
+    # parents 必须一起带上：漏掉它，非首次提交算出来的 SHA 就和本地不一样
+    payload: dict = {"message": message, "tree": tree["sha"],
+                     "author": author, "committer": committer}
+    if parents:
+        payload["parents"] = parents
     commit = api("POST", "git/commits", payload)
     print(f"  commit sha = {commit['sha']}")
     if commit["sha"] == local_sha:
