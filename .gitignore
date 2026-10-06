@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 工具产生的临时截图（docs/ 里的正式截图会被跟踪）
+screenshots/
+
+# 本地数据与配置（真实数据在 %APPDATA%\TodoWidget，不该出现在仓库里）
+data.json
+config.json
+error.log
+*.tmp
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
